@@ -12,7 +12,7 @@ import { BaseWizardComponent } from './base-wizard.component';
 		<div class="wizard-container">
 			<div class="flip-container">
 				<div *ngFor="let step of steps; let i = index" #step class="step" [class.active]="i === currentStep">
-					<h2>{{ step.title }}</h2>
+					<h2>Flip Wizard - Step {{ i + 1 }}</h2>
 					<p>{{ step.content }}</p>
 
 					<ng-container *ngIf="i === 1">

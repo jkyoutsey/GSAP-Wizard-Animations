@@ -13,7 +13,7 @@ import { BaseWizardComponent } from './base-wizard.component';
 			<div class="steps-container">
 				<div *ngFor="let step of steps; let i = index" #step class="step" [class.active]="i === currentStep">
 					<div class="step-content">
-						<h2>{{ step.title }}</h2>
+						<h2>Slide Wizard - Step {{ i + 1 }}</h2>
 						<p>{{ step.content }}</p>
 
 						<ng-container *ngIf="i === 1">
