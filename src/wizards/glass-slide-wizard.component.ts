@@ -141,14 +141,11 @@ export class GlassSlideWizardComponent extends BaseWizardComponent implements Af
 				zIndex: index === 0 ? 10 : 1,
 			});
 
-			// Initialize date form in hidden state
+			// Initialize date form in hidden state but don't affect its height or opacity yet
 			const dateForm = el.nativeElement.querySelector('.date-form');
 			if (dateForm) {
 				gsap.set(dateForm, {
 					display: 'none',
-					height: 0,
-					opacity: 0,
-					overflow: 'hidden',
 				});
 			}
 		});
@@ -204,84 +201,80 @@ export class GlassSlideWizardComponent extends BaseWizardComponent implements Af
 	animateDateForm(show: boolean, element: HTMLElement) {
 		// Kill any running animations
 		gsap.killTweensOf(element);
-		gsap.killTweensOf(element.children);
 
 		if (show) {
-			// Make the container visible but with zero height
+			// Force display block first
+			element.style.display = 'block';
+
+			// Set initial state
 			gsap.set(element, {
-				display: 'block',
-				height: 0,
+				opacity: 0,
+				scale: 0.95,
+				xPercent: -3,
+				transformOrigin: 'top center',
+				display: 'block', // Ensure it's visible
+			});
+
+			// Create glass-like appearing animation similar to step transitions
+			gsap.to(element, {
 				opacity: 1,
-				overflow: 'hidden',
-			});
-
-			// Hide the children initially
-			gsap.set(element.children, {
-				opacity: 0,
-				y: 20,
-			});
-
-			// Create animation timeline
-			const tl = gsap.timeline();
-
-			// First expand the container
-			tl.to(element, {
-				height: 'auto',
-				duration: 0.4,
+				scale: 1,
+				xPercent: 0,
+				duration: 0.5,
 				ease: 'power2.out',
+				backdropFilter: 'blur(4px)',
+				WebkitBackdropFilter: 'blur(4px)',
+				background: 'rgba(255, 255, 255, 0.95)',
 				onComplete: () => {
-					gsap.set(element, { overflow: 'visible' });
+					// Reset backdrop filter after animation completes
+					gsap.to(element, {
+						backdropFilter: 'none',
+						WebkitBackdropFilter: 'none',
+						background: 'white',
+						duration: 0.2,
+					});
 				},
 			});
-
-			// Then animate in the children with stagger
-			tl.to(
-				element.children,
-				{
-					opacity: 1,
-					y: 0,
-					duration: 0.3,
-					ease: 'power2.out',
-					stagger: 0.05,
-				},
-				'-=0.1'
-			);
 		} else {
-			// For hiding, first capture current height
-			const currentHeight = element.offsetHeight;
-
-			// Set fixed height to prepare for animation
-			gsap.set(element, {
-				height: currentHeight,
-				overflow: 'hidden',
-			});
-
-			// Create timeline for exit animation
-			const tl = gsap.timeline({
-				onComplete: () => {
-					gsap.set(element, { display: 'none' });
-				},
-			});
-
-			// First animate out the children
-			tl.to(element.children, {
+			// Create glass-like disappearing animation
+			gsap.to(element, {
 				opacity: 0,
-				y: 10,
-				duration: 0.25,
+				scale: 0.95,
+				xPercent: 3,
+				duration: 0.4,
 				ease: 'power2.in',
-				stagger: 0.03,
-			});
-
-			// Then collapse the container
-			tl.to(
-				element,
-				{
-					height: 0,
-					duration: 0.35,
-					ease: 'power2.inOut',
+				backdropFilter: 'blur(4px)',
+				WebkitBackdropFilter: 'blur(4px)',
+				background: 'rgba(255, 255, 255, 0.85)',
+				onComplete: () => {
+					element.style.display = 'none'; // Directly set display none
 				},
-				'-=0.15'
-			);
+			});
+		}
+	}
+
+	override onOptionChange(event: Event) {
+		// Log the selected value to debug
+		const target = event.target as HTMLInputElement;
+		console.log('Selected option:', target.value, target.id);
+
+		const stepElement = this.stepElements.get(1)?.nativeElement;
+
+		if (stepElement) {
+			const dateForm = stepElement.querySelector('.date-form');
+			console.log('Date form found:', !!dateForm);
+
+			if (dateForm) {
+				// Show the date form for ANY option that contains "2" (like "option2" or "choice2")
+				// This makes our check more flexible
+				if (target.value.includes('2') || target.id.includes('2')) {
+					console.log('Showing date form');
+					this.animateDateForm(true, dateForm);
+				} else {
+					console.log('Hiding date form');
+					this.animateDateForm(false, dateForm);
+				}
+			}
 		}
 	}
 }
