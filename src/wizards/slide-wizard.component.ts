@@ -140,14 +140,13 @@ export class SlideWizardComponent extends BaseWizardComponent implements AfterVi
 				x: index === 0 ? 0 : '100%',
 			});
 
-			// Initialize date form in hidden state
+			// Initialize date form in hidden state - updated to match our animation method
 			const dateForm = el.nativeElement.querySelector('.date-form');
 			if (dateForm) {
 				gsap.set(dateForm, {
-					display: 'block',
+					display: 'none',
 					height: 0,
 					opacity: 0,
-					y: 50,
 					overflow: 'hidden',
 				});
 			}
@@ -169,72 +168,86 @@ export class SlideWizardComponent extends BaseWizardComponent implements AfterVi
 	}
 
 	animateDateForm(show: boolean, element: HTMLElement) {
-		// Clear any running animations
+		// Kill any running animations
 		gsap.killTweensOf(element);
+		gsap.killTweensOf(element.children);
 
 		if (show) {
-			// First display but keep hidden with height 0
+			// Make the container visible but with zero height
 			gsap.set(element, {
 				display: 'block',
 				height: 0,
-				opacity: 0,
-				y: 20,
+				opacity: 1, // Container should be visible
 				overflow: 'hidden',
 			});
 
-			// Get natural height before animating
-			const height = element.scrollHeight;
+			// Hide the children initially
+			gsap.set(element.children, {
+				opacity: 0,
+				y: 20,
+			});
 
-			// Create a timeline for smoother animation
-			const tl = gsap.timeline({
+			// Create animation timeline
+			const tl = gsap.timeline();
+
+			// First expand the container
+			tl.to(element, {
+				height: 'auto',
+				duration: 0.4,
+				ease: 'power2.out',
 				onComplete: () => {
-					// After animation completes, set height to auto
-					gsap.set(element, { height: 'auto', overflow: 'visible' });
+					// Only after height animation is complete, set overflow to visible
+					gsap.set(element, { overflow: 'visible' });
 				},
 			});
 
-			tl.to(element, {
-				height: height,
-				duration: 0.4,
-				ease: 'power2.out',
-			}).to(
-				element,
+			// Then animate in the children with stagger
+			tl.to(
+				element.children,
 				{
 					opacity: 1,
 					y: 0,
-					duration: 0.4,
-					ease: 'back.out(1.2)',
+					duration: 0.3,
+					ease: 'power2.out',
+					stagger: 0.05,
 				},
-				'-=0.2'
-			); // Slight overlap
+				'-=0.1' // Slight overlap
+			);
 		} else {
-			// Hide animation - first set overflow to hidden
-			gsap.set(element, { overflow: 'hidden' });
+			// For hiding, first capture current height and ensure overflow hidden
+			const currentHeight = element.offsetHeight;
 
-			// Get current height
-			const height = element.offsetHeight;
-			gsap.set(element, { height: height });
+			// Set fixed height to prepare for animation
+			gsap.set(element, {
+				height: currentHeight,
+				overflow: 'hidden',
+			});
 
-			// Animate out
+			// Create timeline for exit animation
 			const tl = gsap.timeline({
 				onComplete: () => {
-					element.style.display = 'none';
+					gsap.set(element, { display: 'none' });
 				},
 			});
 
-			tl.to(element, {
+			// First animate out the children
+			tl.to(element.children, {
 				opacity: 0,
-				y: -20,
-				duration: 0.3,
+				y: 10,
+				duration: 0.25,
 				ease: 'power2.in',
-			}).to(
+				stagger: 0.03,
+			});
+
+			// Then collapse the container
+			tl.to(
 				element,
 				{
 					height: 0,
-					duration: 0.3,
+					duration: 0.35,
 					ease: 'power2.inOut',
 				},
-				'-=0.1'
+				'-=0.15'
 			);
 		}
 	}
