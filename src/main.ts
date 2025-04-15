@@ -12,6 +12,7 @@ import { routes } from './app/routes';
 			<div class="buttons">
 				<a routerLink="/slide-wizard" class="button">Slide Wizard</a>
 				<a routerLink="/flip-wizard" class="button">Flip Wizard</a>
+				<a routerLink="/glass-slide-wizard" class="button">Glass Slide Wizard</a>
 			</div>
 			<router-outlet></router-outlet>
 		</div>
